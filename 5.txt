@@ -1,0 +1,66 @@
+# Network Setup #
+
+Oracle Vm -> Hadoop Training -> Network Setting -> Attached to : Bridged Adaptor -> Advanded -> Promiscous Mode : Allow All -> Cable Connected : True -> ok
+
+In Hadoop terminal enter command 
+  ifconfig 
+Copy inet addr
+
+# Send files from windows to  VM #
+
+Right click Folder Storing dataset -> Open in terminal -> enter command
+
+    scp {filename with extension} hadoop@{inet addr}:/home/hadoop
+It will ask for password: hadoop
+
+# Steps to be Followed #
+1. Go to terminal in VM and execute the following commands,
+    hadoop fs -put movies.csv movies.csv
+    
+    hadoop fs -put ratings.csv ratings.csv
+    
+    hive
+    
+    create table if not exists movies(
+      id int,
+      name string,
+      genre string)
+      row format delimited
+      fields terminated by ',' ;
+
+    load data local inpath 'movies.csv' into table movies;
+
+    create table if not exists ratings(
+      userId int,
+      movieId int,
+      rating float,
+      `timestamp` timestamp)
+       row format delimited
+      fields terminated by ',' ;
+
+    load data local inpath 'ratings.csv' into table ratings;
+
+  a. To find the movie with the highest average rating.
+  
+    select movieId, avg(rating) as avg_rating
+    from ratings
+    group by movieId
+    order by avg_rating desc
+    limit 1;
+
+  b. Identify the most active users based on the number of ratings submitted.
+
+    select userId, count(*) as num_ratings
+    from ratings
+    group by userId
+    order by num_ratings desc
+    limit 10;
+
+  c. Discover movies with the highest number of positive ratings.
+
+    select movieId, count(*) as positive_ratings
+    from ratings
+    where rating >= 4
+    group by movieId
+    order by positive_ratings desc;
+    
