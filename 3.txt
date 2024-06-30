@@ -1,0 +1,140 @@
+# Network Setup #
+
+Oracle Vm -> Hadoop Training -> Network Setting -> Attached to : Bridged Adaptor -> Advanded -> Promiscous Mode : Allow All -> Cable Connected : True -> ok
+
+In Hadoop terminal enter command 
+  ifconfig 
+Copy inet addr
+
+# Send files from windows to  VM #
+
+Right click Folder Storing dataset -> Open in terminal -> enter command
+
+    scp {filename with extension} hadoop@{inet addr}:/home/hadoop
+
+
+Steps to be followed:
+
+• Step-1: Open Eclipse -> then select File -> New -> Java Project -> Name
+it MyProject -> then Finish.
+
+• Step-2: Create Three Java Classes into the project.
+File -> New -> Class
+Name them maxtemperature (having the main function), MaxTempMapper and
+MaxTempReducer.
+
+• Step-3: You have to include two Reference Libraries,
+Right Click on src of Project -> then select Build Path -> Click on Configure Build Path -> Libraries ->Add External JARs -> hadoop -> Training -> CDH4 ->
+hadoop-2.0.0-cdh4.0.0-> share -> hadoop -> common -> hadoop-common(1st jar file) -> ok
+Add External JARs -> hadoop -> Training -> CDH4 ->
+hadoop-2.0.0-cdh4.0.0-> share -> hadoop -> mapreduce -> hadoop-mapreduce(3rd jar file) -> ok
+Press ok
+
+Step-4: Mapper Code which should be copied and pasted into the MaxTempMapper
+Java Class file.
+
+import java.io.IOException;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Mapper;
+public class MaxTempMapper extends Mapper<LongWritable, Text, Text, IntWritable > {
+
+	public void map(LongWritable key, Text value, Context context)
+			throws IOException, InterruptedException {
+ String line=value.toString();
+ String year=line.substring(15,19);
+ int airtemp;
+ if(line.charAt(87)== '+')
+ {
+	 airtemp=Integer.parseInt(line.substring(88,92));
+	 
+ }
+ else
+		 airtemp=Integer.parseInt(line.substring(87,92));
+		 String q=line.substring(92,93);
+		 if(airtemp!=9999&&q.matches("[01459]"))
+		 {
+			 context.write(new Text(year),new IntWritable(airtemp));
+			 
+		 }
+	 }
+	 
+ }
+ 
+
+• Step-5: Reducer Code which should be copied and pasted into the WCReducer
+Java Class file.
+
+import java.io.IOException;
+
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Reducer;
+
+
+public class MaxTempReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+public void reduce(Text key, Iterable<IntWritable> values, Context context)
+			throws IOException, InterruptedException {
+		int maxvalue=Integer.MIN_VALUE;
+		for (IntWritable value : values) {
+maxvalue=Math.max(maxvalue, value.get());
+		}
+		context.write(key, new IntWritable(maxvalue));
+	}
+
+}
+
+• Step-6: Driver Code which should be copied and pasted into the WCDriver Java
+Class file.
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class maxtemperature {
+
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "maxtemperature");
+		job.setJarByClass(maxtemperature.class);
+		// TODO: specify a mapper
+		job.setMapperClass(MaxTempMapper.class);
+		// TODO: specify a reducer
+		job.setReducerClass(MaxTempReducer.class);
+
+		// TODO: specify output types
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+
+		// TODO: specify input and output DIRECTORIES (not files)
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+		if (!job.waitForCompletion(true))
+			return;
+	}
+
+}
+
+Step-7: Now you have to make a jar file.
+Right Click on Project -> Click on Export -> Select export destination as Jar
+File -> Name the jar File (temp.jar) -> Click on next -> at last Click on
+Finish.
+
+Step-8: Now, run the below command to copy the dataset into the HDFS
+
+    hadoop fs -put tempinput.txt tempinput.txt
+
+• Step-9: Now to run the jar file, execute the below code,
+
+    hadoop jar wordcount.jar maxtemperature tempinput.txt output
+
+• Step-10: After Executing the code, you can see the result in output file or by
+writing following command on terminal,
+
+    hadoop fs -cat output/part-r-00000
