@@ -11,7 +11,7 @@ Copy inet addr
 Right click Folder Storing dataset -> Open in terminal -> enter command
 
     scp {filename with extension} hadoop@{inet addr}:/home/hadoop
-
+It will ask for password: hadoop
 
 Steps to be followed:
 
