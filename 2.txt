@@ -119,4 +119,4 @@ Now, Create a text file (WCFile.txt) and move it to HDFS.
 • Step-11: After Executing the code, you can see the result in WCOutput file or by
 writing following command on terminal,
 
-    hadoop fs -cat WCOutput/part-00000
+    hadoop fs -cat WCOutput/part-r-00000
